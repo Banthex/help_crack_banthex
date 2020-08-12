@@ -932,7 +932,7 @@ class HelpCrack(object):
                         sqlFetch = cursor.fetchone()
                         keyFound = sqlFetch[1]
                         keyInsert = keyFound + addKey
-                        sqlIn =  "UPDATE Leaderboard SET Handshakes = %s, Date = %s WHERE Username = %s"
+                        sqlIn =  "UPDATE Leaderboard SET Handshakes = %s, Date = %s WHERE Username COLLATE utf8mb4_0900_as_cs = %s"
                         sqlVal = keyInsert, date, UsernameInput
                         cursor.execute(sqlIn, sqlVal)
                         connection.commit()
