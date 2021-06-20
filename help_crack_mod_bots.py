@@ -3,7 +3,7 @@
 The source code is distributed under GPLv3+ license
 author: Alex Stanev, alex at stanev dot org
 web: https://wpa-sec.stanev.org
-*added feature to save found handshakes in database for statistical (and fun) evaluation by Banthex '''
+*added feature to save found handshakes in database for statistical evaluation by Banthex '''
 
 from __future__ import print_function
 import argparse
@@ -26,11 +26,12 @@ from functools import partial
 import sqlite3
 from datetime import datetime
 import mysql.connector
+import pymysql
+from past.builtins import raw_input
 
 try:
     from urllib import urlretrieve
     from urllib import urlopen
-    
     from urllib import urlencode
 except ImportError:
     from urllib.parse import urlencode
@@ -73,29 +74,40 @@ date = datetime.now()
 print("Please insert your Username!")
 UsernameInput = input("Highscore Username: ")
 
+# enter your server IP address/domain name
+HOST = "YOURSERVERIP" # or "domain.com"
+# database name, if you want just to connect to MySQL server, leave it empty
+DATABASE = "YOURDATABASE"
+# this is the user you create
+USER = "YOURDATABASEUSER"
+# user password
+PASSWORD = "YOURDATABASEPASSWORD"
+
 print("Connecting to Database...")
+
 try:
-    connection = mysql.connector.connect(host = "yourdatabaseip", \
-    user = "yourdatabaseuser", passwd = "yourdatabasepassword", db = "yourdatabasename")
+    connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
+
 except:
-    print("No connection to Database")
+    print("No connection to Database.")
     sys.exit(0)
 print("Connection succesfull!")
 
 cursor = connection.cursor()
-SQL =  "SELECT * FROM Leaderboard WHERE Username COLLATE utf8mb4_0900_as_cs = '%s'" % (UsernameInput)
+SQL = "SELECT * FROM leaderboard WHERE Username COLLATE utf8mb4_0900_as_cs = '%s'" % (UsernameInput)
 cursor.execute(SQL)
 sqlFetch1 = cursor.fetchone()
 
 if sqlFetch1 == None:
     print("Create Account with Username", UsernameInput)
     date = datetime.now()
-    sqlIN = "INSERT INTO Leaderboard (Username, Handshakes, Date) VALUES (%s, %s, %s)"
+    sqlIN = "INSERT INTO leaderboard (Username, Handshakes, Date) VALUES (%s, %s, %s)"
     sqlVAL = UsernameInput, 0, date
     cursor.execute(sqlIN, sqlVAL)
     connection.commit()
     print("User", UsernameInput, "was successfully created")
     connection.commit()
+
 
 class HelpCrack(object):
     '''Main helpcrack class'''
@@ -112,12 +124,12 @@ class HelpCrack(object):
         if os.name == 'nt':
             print(mess)
         else:
-            cc = {'HEADER':  '\033[95m',
-                  'OKBLUE':  '\033[94m',
+            cc = {'HEADER': '\033[95m',
+                  'OKBLUE': '\033[94m',
                   'OKGREEN': '\033[92m',
                   'WARNING': '\033[93m',
-                  'FAIL':    '\033[91m',
-                  'ENDC':    '\033[0m'}
+                  'FAIL': '\033[91m',
+                  'ENDC': '\033[0m'}
             print(cc[code] + mess + cc['ENDC'])
 
     def sleepy(self, sec=222):
@@ -178,7 +190,7 @@ class HelpCrack(object):
 
     def check_version(self):
         '''compare version and initiate update'''
-        remoteversion = self.get_url(self.conf['help_crack']+'.version')
+        remoteversion = self.get_url(self.conf['help_crack'] + '.version')
         if not remoteversion:
             self.pprint('Can\'t check for new version, continue...', 'WARNING')
             return
@@ -191,15 +203,16 @@ class HelpCrack(object):
                     self.pprint(self.get_url(self.conf['help_crack_cl']))
                     continue
                 if user == 'y' or user == '':
-                    if self.download(self.conf['help_crack'], sys.argv[0]+'.new'):
+                    if self.download(self.conf['help_crack'], sys.argv[0] + '.new'):
                         try:
-                            os.rename(sys.argv[0]+'.new', sys.argv[0])
+                            os.rename(sys.argv[0] + '.new', sys.argv[0])
                             os.chmod(sys.argv[0], stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
                         except OSError as e:
                             self.pprint('Exception: {0}'.format(e), 'FAIL')
                             # TODO: think of workaround locking on win32
                             if os.name == 'nt':
-                                self.pprint('You are running under win32, rename help_crack.py.new over help_crack.py', 'OKBLUE')
+                                self.pprint('You are running under win32, rename help_crack.py.new over help_crack.py',
+                                            'OKBLUE')
                         self.pprint('help_crack updated, run again', 'OKGREEN')
                         exit(0)
                     else:
@@ -213,6 +226,7 @@ class HelpCrack(object):
 
         def which(program):
             '''find executable in current dir or in PATH env var'''
+
             def is_exe(fpath):
                 '''check if file exists and is executable'''
                 return os.path.exists(fpath) and os.access(fpath, os.X_OK)
@@ -238,6 +252,7 @@ class HelpCrack(object):
 
         def run_hashcat(tl):
             '''check hashcat version'''
+
             def _run_hashcat(tool):
                 '''execute and check version'''
                 try:
@@ -267,6 +282,7 @@ class HelpCrack(object):
 
         def run_jtr():
             '''check JtR capabilities'''
+
             def _run_jtr(tool):
                 '''execute and check'''
                 try:
@@ -452,7 +468,7 @@ class HelpCrack(object):
     def get_work(self, options):
         '''pull handshakes and optionally dictionary location/ssid'''
         while True:
-            work = self.get_url(self.conf['get_work_url']+'='+self.conf['hc_ver'], options)
+            work = self.get_url(self.conf['get_work_url'] + '=' + self.conf['hc_ver'], options)
             try:
                 netdata = json.loads(work)
                 if not (any('ssid' in d for d in netdata) or any('hkey' in d for d in netdata)):
@@ -667,7 +683,8 @@ class HelpCrack(object):
                 # TODO: fix this code duplication
                 if self.conf['format'] == 'hccapx':
                     if os.path.exists(self.conf['pmkid_file']):
-                        cracker = '{0} -m16800 --advice-disable --logfile-disable --potfile-disable {1} -o{2} {3}'.format(self.conf['cracker'], self.conf['coptions'], self.conf['key_file'], self.conf['pmkid_file'])
+                        cracker = '{0} -m16800 --advice-disable --logfile-disable --potfile-disable {1} -o{2} {3}'.format(
+                            self.conf['cracker'], self.conf['coptions'], self.conf['key_file'], self.conf['pmkid_file'])
                         for dn in dictlist:
                             cracker = ''.join([cracker, ' ', dn])
                         rc = subprocess.call(shlex.split(cracker), stdout=fd)
@@ -681,7 +698,9 @@ class HelpCrack(object):
                             exit(1)
 
                     if os.path.exists(self.conf['hccapx_file']):
-                        cracker = '{0} -m2500 --nonce-error-corrections=8 --advice-disable --logfile-disable --potfile-disable {1} -o{2} {3}'.format(self.conf['cracker'], self.conf['coptions'], self.conf['key_file'], self.conf['hccapx_file'])
+                        cracker = '{0} -m2500 --nonce-error-corrections=8 --advice-disable --logfile-disable --potfile-disable {1} -o{2} {3}'.format(
+                            self.conf['cracker'], self.conf['coptions'], self.conf['key_file'],
+                            self.conf['hccapx_file'])
                         for dn in dictlist:
                             cracker = ''.join([cracker, ' ', dn])
                         rc = subprocess.call(shlex.split(cracker), stdout=fd)
@@ -702,7 +721,8 @@ class HelpCrack(object):
                         dp = 'cat '
                     for dn in dictlist:
                         dp = ''.join([dp, ' ', dn])
-                    cracker = '{0} {1} --stdin --pot={2} {3}'.format(self.conf['cracker'], self.conf['coptions'], self.conf['key_file'], self.conf['hccapx_file'])
+                    cracker = '{0} {1} --stdin --pot={2} {3}'.format(self.conf['cracker'], self.conf['coptions'],
+                                                                     self.conf['key_file'], self.conf['hccapx_file'])
                     p1 = subprocess.Popen(shlex.split(dp), stdout=subprocess.PIPE)
                     p2 = subprocess.Popen(shlex.split(cracker), stdin=p1.stdout, stdout=subprocess.PIPE)
                     p1.stdout.close()
@@ -726,11 +746,11 @@ class HelpCrack(object):
                 arr = pot.split(b':', 4)
                 bssid = arr[1][:12]
                 bssid = bssid[0:2] + \
-                    b':' + bssid[2:4] + \
-                    b':' + bssid[4:6] + \
-                    b':' + bssid[6:8] + \
-                    b':' + bssid[8:10] + \
-                    b':' + bssid[10:12]
+                        b':' + bssid[2:4] + \
+                        b':' + bssid[4:6] + \
+                        b':' + bssid[6:8] + \
+                        b':' + bssid[8:10] + \
+                        b':' + bssid[10:12]
                 return {'bssid': bssid, 'key': arr[4].rstrip(b'\r\n')}
             except (TypeError, ValueError, KeyError, IndexError):
                 pass
@@ -739,6 +759,7 @@ class HelpCrack(object):
 
         def parse_jtr(pot):
             '''parse JtR potfile line'''
+
             def jb64decode(jb64):
                 '''JtR b64 decode'''
                 encode_trans = maketrans(b'./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
@@ -760,11 +781,11 @@ class HelpCrack(object):
                 phccap = jb64decode(arr[1])
                 bssid = binascii.hexlify(phccap[:6])
                 bssid = bssid[0:2] + \
-                    b':' + bssid[2:4] + \
-                    b':' + bssid[4:6] + \
-                    b':' + bssid[6:8] + \
-                    b':' + bssid[8:10] + \
-                    b':' + bssid[10:12]
+                        b':' + bssid[2:4] + \
+                        b':' + bssid[4:6] + \
+                        b':' + bssid[6:8] + \
+                        b':' + bssid[8:10] + \
+                        b':' + bssid[10:12]
             except (binascii.Error, binascii.Incomplete):
                 return False
 
@@ -777,11 +798,11 @@ class HelpCrack(object):
                 arr1 = arr[0].split(b'*', 3)
                 bssid = arr1[1]
                 bssid = bssid[0:2] + \
-                    b':' + bssid[2:4] + \
-                    b':' + bssid[4:6] + \
-                    b':' + bssid[6:8] + \
-                    b':' + bssid[8:10] + \
-                    b':' + bssid[10:12]
+                        b':' + bssid[2:4] + \
+                        b':' + bssid[4:6] + \
+                        b':' + bssid[6:8] + \
+                        b':' + bssid[8:10] + \
+                        b':' + bssid[10:12]
                 return {'bssid': bssid, 'key': arr[1].rstrip(b'\r\n')}
             except (TypeError, ValueError, KeyError, IndexError):
                 pass
@@ -796,11 +817,11 @@ class HelpCrack(object):
                     raise ValueError
                 bssid = arr[0]
                 bssid = bssid[0:2] + \
-                    b':' + bssid[2:4] + \
-                    b':' + bssid[4:6] + \
-                    b':' + bssid[6:8] + \
-                    b':' + bssid[8:10] + \
-                    b':' + bssid[10:12]
+                        b':' + bssid[2:4] + \
+                        b':' + bssid[4:6] + \
+                        b':' + bssid[6:8] + \
+                        b':' + bssid[8:10] + \
+                        b':' + bssid[10:12]
                 return {'bssid': bssid, 'key': arr[3].rstrip(b'\r\n')}
             except (TypeError, ValueError, KeyError, IndexError):
                 pass
@@ -818,10 +839,10 @@ class HelpCrack(object):
 
                         # check if we have user potfile. Don't write if it's the challenge
                         if self.conf['potfile'] and not \
-                            (b'76c6eaf116d91cc1450561b00c98ea19' in line
-                             or b'55vZsj9E.0P59YY.N3gTO2cZNi6GNj2XewC4n3RjKH' in line
-                             or b'8ac36b891edca8eef49094b1afe061acd0*1c7ee5e2f2d0' in line
-                             or b'1c7ee5e2f2d0:0026c72e4900:dlink:aaaa1234' in line):
+                                (b'76c6eaf116d91cc1450561b00c98ea19' in line
+                                 or b'55vZsj9E.0P59YY.N3gTO2cZNi6GNj2XewC4n3RjKH' in line
+                                 or b'8ac36b891edca8eef49094b1afe061acd0*1c7ee5e2f2d0' in line
+                                 or b'1c7ee5e2f2d0:0026c72e4900:dlink:aaaa1234' in line):
                             with open(self.conf['potfile'], 'ab') as fdpot:
                                 fdpot.write(line)
 
@@ -908,35 +929,52 @@ class HelpCrack(object):
             if self.conf['autodictcount']:
                 if options['dictcount'] < 15 and cdiff < 300:  # 5 min
                     options['dictcount'] += 1
-                    self.pprint('Incrementing dictcount to {0}, last duration {1}s'.format(options['dictcount'], cdiff), 'OKBLUE')
+                    self.pprint('Incrementing dictcount to {0}, last duration {1}s'.format(options['dictcount'], cdiff),
+                                'OKBLUE')
                 if options['dictcount'] > 1 and cdiff > 300:
                     options['dictcount'] -= 1
-                    self.pprint('Decrementing dictcount to {0}, last duration {1}s'.format(options['dictcount'], cdiff), 'OKBLUE')
+                    self.pprint('Decrementing dictcount to {0}, last duration {1}s'.format(options['dictcount'], cdiff),
+                                'OKBLUE')
 
             keypair = self.get_key()
             if keypair:
                 for k in keypair:
                     try:
-                        self.pprint('Key for bssid {0} is: {1}'.format(k['bssid'].decode(sys.stdout.encoding or 'utf-8', errors='ignore'),
-                                                                       k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')), 'OKGREEN')
+                        self.pprint('Key for bssid {0} is: {1}'.format(
+                            k['bssid'].decode(sys.stdout.encoding or 'utf-8', errors='ignore'),
+                            k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')), 'OKGREEN')
                         date = datetime.now()
                         print("Connecting to Database...")
-                        connection = mysql.connector.connect(host = "yourdatabaseip", \
-                            user = "yourdatabaseuser", passwd = "yourdatabasepassword", db = "yourdatabasename")
+                        connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
                         print("Connection succesfull!")
                         print("Searching", UsernameInput, "in Database...")
                         addKey = 1
                         cursor = connection.cursor()
-                        sql =  "SELECT * FROM Leaderboard WHERE Username COLLATE utf8mb4_0900_as_cs = '%s'" % (UsernameInput)
+                        sql = "SELECT * FROM leaderboard WHERE Username COLLATE utf8mb4_0900_as_cs = '%s'" % (
+                            UsernameInput)
                         cursor.execute(sql)
                         sqlFetch = cursor.fetchone()
                         keyFound = sqlFetch[1]
                         keyInsert = keyFound + addKey
-                        sqlIn =  "UPDATE Leaderboard SET Handshakes = %s, Date = %s WHERE Username COLLATE utf8mb4_0900_as_cs = %s"
+                        sqlIn = "UPDATE leaderboard SET Handshakes  = %s, Date = %s WHERE Username COLLATE utf8mb4_0900_as_cs = %s"
                         sqlVal = keyInsert, date, UsernameInput
                         cursor.execute(sqlIn, sqlVal)
                         connection.commit()
                         print("Well done", UsernameInput, "! You found a handshake. Your score gets an extra point.")
+                        # SQlite
+                        print("Handshakes has saved in sqlite.")
+                        bssid = k['bssid'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')
+                        key = k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')
+                        connsql = sqlite3.connect('database.banthex.db')
+                        c = connsql.cursor()
+                        sql = ''' INSERT INTO handshakes(BSSID,Keys,Date)
+                                   VALUES(?,?,?) '''
+                        data_tuble = (bssid, key, date)
+                        c.execute(sql, data_tuble)
+                        connsql.commit()
+                        connsql.close()
+                        print("Close connection to database.")
+
 
 
                     except UnicodeEncodeError:
@@ -956,6 +994,7 @@ if __name__ == "__main__":
             aparser.error('The file {} does not exist!'.format(arg))
         return arg
 
+
     def is_valid_dc(aparser, arg):
         '''check if it's a valid dict count'''
         iarg = int(arg)
@@ -963,14 +1002,20 @@ if __name__ == "__main__":
             aparser.error('dictionaries count must be between 1 and 15')
         return arg
 
-    parser = argparse.ArgumentParser(description='help_crack, distributed WPA cracker site: {0}'.format(conf['base_url']))
+
+    parser = argparse.ArgumentParser(
+        description='help_crack, distributed WPA cracker site: {0}'.format(conf['base_url']))
     parser.add_argument('-v', '--version', action='version', version=conf['hc_ver'])
-    parser.add_argument('-co', '--coptions', type=str, help='custom options, that will be supplied to cracker. Those must be passed as -co="--your_option"')
+    parser.add_argument('-co', '--coptions', type=str,
+                        help='custom options, that will be supplied to cracker. Those must be passed as -co="--your_option"')
     parser.add_argument('-pot', '--potfile', type=str, help='preserve cracked results in user supplied pot file')
-    parser.add_argument('-dc', '--dictcount', type=lambda x: is_valid_dc(parser, x), help='count of dictionaries to be downloaded and checked against')
+    parser.add_argument('-dc', '--dictcount', type=lambda x: is_valid_dc(parser, x),
+                        help='count of dictionaries to be downloaded and checked against')
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-ad', '--additional', type=lambda x: is_valid_file(parser, x), help='additional user dictionary to be checked after downloaded one')
-    group.add_argument('-cd', '--custom', type=lambda x: is_valid_file(parser, x), help='custom user dictionary to be checked against all uncracked handshakes')
+    group.add_argument('-ad', '--additional', type=lambda x: is_valid_file(parser, x),
+                       help='additional user dictionary to be checked after downloaded one')
+    group.add_argument('-cd', '--custom', type=lambda x: is_valid_file(parser, x),
+                       help='custom user dictionary to be checked against all uncracked handshakes')
 
     try:
         args = parser.parse_args()
