@@ -74,20 +74,13 @@ date = datetime.now()
 print("Please insert your Username!")
 UsernameInput = input("Highscore Username: ")
 
-# enter your server IP address/domain name
-HOST = "YOURSERVERIP" # or "domain.com"
-# database name, if you want just to connect to MySQL server, leave it empty
-DATABASE = "YOURDATABASE"
-# this is the user you create
-USER = "YOURDATABASEUSER"
-# user password
-PASSWORD = "YOURDATABASEPASSWORD"
-
 print("Connecting to Database...")
 
 try:
-    connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
-
+    connection = mysql.connector.connect(host="YOURDATABASEIP",
+                                         user="YOURDATABASEUSER",
+                                         passwd="YOURDATABASEPASS",
+                                         db="YOURDATABASE")
 except:
     print("No connection to Database.")
     sys.exit(0)
@@ -945,7 +938,10 @@ class HelpCrack(object):
                             k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')), 'OKGREEN')
                         date = datetime.now()
                         print("Connecting to Database...")
-                        connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
+                        connection = mysql.connector.connect(host="DATABASEIP",
+                                                             user="DATABASEUSER",
+                                                             passwd="DATABASEPASSWPRD",
+                                                             db="DATABASE")
                         print("Connection succesfull!")
                         print("Searching", UsernameInput, "in Database...")
                         addKey = 1
@@ -965,14 +961,14 @@ class HelpCrack(object):
                         print("Handshakes has saved in sqlite.")
                         bssid = k['bssid'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')
                         key = k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')
-                        connsql = sqlite3.connect('database.banthex.db')
-                        c = connsql.cursor()
+                        conn = sqlite3.connect('database.banthex.db')
+                        c = conn.cursor()
                         sql = ''' INSERT INTO handshakes(BSSID,Keys,Date)
                                    VALUES(?,?,?) '''
                         data_tuble = (bssid, key, date)
                         c.execute(sql, data_tuble)
-                        connsql.commit()
-                        connsql.close()
+                        conn.commit()
+                        conn.close()
                         print("Close connection to database.")
 
 
