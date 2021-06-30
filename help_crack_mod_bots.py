@@ -23,10 +23,8 @@ import binascii
 import struct
 from distutils.version import StrictVersion
 from functools import partial
-import sqlite3
 from datetime import datetime
 import mysql.connector
-import pymysql
 from past.builtins import raw_input
 
 try:
@@ -74,13 +72,20 @@ date = datetime.now()
 print("Please insert your Username!")
 UsernameInput = input("Highscore Username: ")
 
+# enter your server IP address/domain name
+HOST = "yourip" # or "domain.com"
+# database name, if you want just to connect to MySQL server, leave it empty
+DATABASE = "yourdatabase"
+# this is the user you create
+USER = "databaseuser"
+# user password
+PASSWORD = "databasepassword"
+
 print("Connecting to Database...")
 
 try:
-    connection = mysql.connector.connect(host="YOURDATABASEIP",
-                                         user="YOURDATABASEUSER",
-                                         passwd="YOURDATABASEPASS",
-                                         db="YOURDATABASE")
+    connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
+
 except:
     print("No connection to Database.")
     sys.exit(0)
@@ -938,10 +943,7 @@ class HelpCrack(object):
                             k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')), 'OKGREEN')
                         date = datetime.now()
                         print("Connecting to Database...")
-                        connection = mysql.connector.connect(host="DATABASEIP",
-                                                             user="DATABASEUSER",
-                                                             passwd="DATABASEPASSWPRD",
-                                                             db="DATABASE")
+                        connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
                         print("Connection succesfull!")
                         print("Searching", UsernameInput, "in Database...")
                         addKey = 1
