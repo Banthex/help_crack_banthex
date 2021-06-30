@@ -1,4 +1,4 @@
-# help_crack_bots
+# public version of help_crack_banthex
 Modification of help_crack.py from https://wpa-sec.stanev.org/
 
 *added Leaderboard in mySQL on http://www.banthex.de/
