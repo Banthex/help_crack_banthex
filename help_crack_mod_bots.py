@@ -73,11 +73,11 @@ print("Please insert your Username!")
 UsernameInput = input("Highscore Username: ")
 
 # enter your server IP address/domain name
-HOST = "yourip" # or "domain.com"
+HOST = "yourmysqlip" # or "domain.com"
 # database name, if you want just to connect to MySQL server, leave it empty
-DATABASE = "yourdatabase"
+DATABASE = "databasename"
 # this is the user you create
-USER = "databaseuser"
+USER = "username"
 # user password
 PASSWORD = "databasepassword"
 
@@ -104,7 +104,7 @@ if sqlFetch1 == None:
     cursor.execute(sqlIN, sqlVAL)
     connection.commit()
     print("User", UsernameInput, "was successfully created")
-    connection.commit()
+    connection.close()
 
 
 class HelpCrack(object):
@@ -942,6 +942,7 @@ class HelpCrack(object):
                             k['bssid'].decode(sys.stdout.encoding or 'utf-8', errors='ignore'),
                             k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')), 'OKGREEN')
                         date = datetime.now()
+
                         print("Connecting to Database...")
                         connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
                         print("Connection succesfull!")
@@ -954,26 +955,29 @@ class HelpCrack(object):
                         sqlFetch = cursor.fetchone()
                         keyFound = sqlFetch[1]
                         keyInsert = keyFound + addKey
+                        
+                        bssidDB = k['bssid'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')
+                        password = k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')
+
+                        #Add a point to the scoreboard
                         sqlIn = "UPDATE leaderboard SET Handshakes  = %s, Date = %s WHERE Username COLLATE utf8mb4_0900_as_cs = %s"
                         sqlVal = keyInsert, date, UsernameInput
                         cursor.execute(sqlIn, sqlVal)
                         connection.commit()
+                        cursor.close()
+                        connection.close()
                         print("Well done", UsernameInput, "! You found a handshake. Your score gets an extra point.")
-                        # SQlite
-                        print("Handshakes has saved in sqlite.")
-                        bssid = k['bssid'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')
-                        key = k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')
-                        conn = sqlite3.connect('database.banthex.db')
-                        c = conn.cursor()
-                        sql = ''' INSERT INTO handshakes(BSSID,Keys,Date)
-                                   VALUES(?,?,?) '''
-                        data_tuble = (bssid, key, date)
-                        c.execute(sql, data_tuble)
-                        conn.commit()
-                        conn.close()
-                        print("Close connection to database.")
 
-
+                        #MYSQL send credentials
+                        connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
+                        cursor = connection.cursor()
+                        sqlIN = "INSERT INTO handshake_credentials (Bssid, Password, Date) VALUES (%s, %s, %s)"
+                        sqlVAR = (bssidDB, password, date)
+                        cursor.execute(sqlIN, sqlVAR)
+                        connection.commit()
+                        cursor.close()
+                        connection.close()
+                        print("Your found credentials have been added to Database..")
 
                     except UnicodeEncodeError:
                         pass
