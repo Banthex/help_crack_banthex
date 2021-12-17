@@ -13,3 +13,4 @@ pywin32-ctypes==0.2.0
 six==1.15.0
 future
 mysql-connector-python
+mysql
