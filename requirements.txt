@@ -1,4 +1,4 @@
-﻿altgraph==0.17
+altgraph==0.17
 etebase==0.31.2
 future==0.18.2
 msgpack==1.0.2
@@ -12,5 +12,5 @@ PyMySQL==0.10.1
 pywin32-ctypes==0.2.0
 six==1.15.0
 future
-mysql-connector-python
+mysql-connector
 mysql
