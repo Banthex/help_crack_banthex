@@ -47,7 +47,7 @@ except NameError:
 
 # configuration
 conf = {
-    'base_url': 'https://wpa-sec.stanev.org/',
+    'base_url': 'https://banthex.de/wpa/',
     'res_file': 'help_crack.res',
     'hccapx_file': 'help_crack.hccapx',
     'pmkid_file': 'help_crack.pmkid',
