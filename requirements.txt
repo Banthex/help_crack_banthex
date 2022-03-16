@@ -14,3 +14,4 @@ six==1.15.0
 future
 mysql-connector
 mysql
+requests
