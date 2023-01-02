@@ -320,9 +320,9 @@ class HelpCrack(object):
         # hashcat
         bits = platform.architecture()[0]
         if bits == '64bit':
-            tools += run_hashcat(['hashcat64.bin', 'hashcat64', 'hashcat'])
+            tools += run_hashcat(['hashcat64.bin', 'hashcat64', 'hashcat', 'hashcat.bin'])
         else:
-            tools += run_hashcat(['hashcat32.bin', 'hashcat32', 'hashcat'])
+            tools += run_hashcat(['hashcat32.bin', 'hashcat32', 'hashcat', 'hashcat.bin'])
 
         # John the Ripper
         tools += run_jtr()
