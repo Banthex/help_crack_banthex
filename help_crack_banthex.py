@@ -24,8 +24,8 @@ import struct
 from distutils.version import StrictVersion
 from functools import partial
 from datetime import datetime
-import mysql.connector
 from past.builtins import raw_input
+import requests
 
 try:
     from urllib import urlretrieve
@@ -71,41 +71,6 @@ date = datetime.now()
 
 print("Please insert your Username!")
 UsernameInput = input("Highscore Username: ")
-
-# enter your server IP address/domain name
-HOST = "yourmysqlip" # or "domain.com"
-# database name, if you want just to connect to MySQL server, leave it empty
-DATABASE = "databasename"
-# this is the user you create
-USER = "username"
-# user password
-PASSWORD = "databasepassword"
-
-print("Connecting to Database...")
-
-try:
-    connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
-
-except:
-    print("No connection to Database.")
-    sys.exit(0)
-print("Connection succesfull!")
-
-cursor = connection.cursor()
-SQL = "SELECT * FROM leaderboard WHERE Username COLLATE utf8mb4_0900_as_cs = '%s'" % (UsernameInput)
-cursor.execute(SQL)
-sqlFetch1 = cursor.fetchone()
-
-if sqlFetch1 == None:
-    print("Create Account with Username", UsernameInput)
-    date = datetime.now()
-    sqlIN = "INSERT INTO leaderboard (Username, Handshakes, Date) VALUES (%s, %s, %s)"
-    sqlVAL = UsernameInput, 0, date
-    cursor.execute(sqlIN, sqlVAL)
-    connection.commit()
-    print("User", UsernameInput, "was successfully created")
-    connection.close()
-
 
 class HelpCrack(object):
     '''Main helpcrack class'''
@@ -320,9 +285,9 @@ class HelpCrack(object):
         # hashcat
         bits = platform.architecture()[0]
         if bits == '64bit':
-            tools += run_hashcat(['hashcat64.bin', 'hashcat64', 'hashcat', 'hashcat.bin'])
+            tools += run_hashcat(['hashcat64.bin', 'hashcat64', 'hashcat'])
         else:
-            tools += run_hashcat(['hashcat32.bin', 'hashcat32', 'hashcat', 'hashcat.bin'])
+            tools += run_hashcat(['hashcat32.bin', 'hashcat32', 'hashcat'])
 
         # John the Ripper
         tools += run_jtr()
@@ -943,41 +908,18 @@ class HelpCrack(object):
                             k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')), 'OKGREEN')
                         date = datetime.now()
 
-                        print("Connecting to Database...")
-                        connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
-                        print("Connection succesfull!")
-                        print("Searching", UsernameInput, "in Database...")
-                        addKey = 1
-                        cursor = connection.cursor()
-                        sql = "SELECT * FROM leaderboard WHERE Username COLLATE utf8mb4_0900_as_cs = '%s'" % (
-                            UsernameInput)
-                        cursor.execute(sql)
-                        sqlFetch = cursor.fetchone()
-                        keyFound = sqlFetch[1]
-                        keyInsert = keyFound + addKey
-                        
-                        bssidDB = k['bssid'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')
-                        password = k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')
+                        API_URL = "https://mywordpres_api-url.com/wp-json/points/v1/points"
+                        header = {"Authorization" : "Basic myhashehere"}
 
-                        #Add a point to the scoreboard
-                        sqlIn = "UPDATE leaderboard SET Handshakes  = %s, Date = %s WHERE Username COLLATE utf8mb4_0900_as_cs = %s"
-                        sqlVal = keyInsert, date, UsernameInput
-                        cursor.execute(sqlIn, sqlVal)
-                        connection.commit()
-                        cursor.close()
-                        connection.close()
+                        data = {
+                            "points": "1",
+                            "user": UsernameInput,
+                            "points_type": "handshake"
+                            }
+                        response = requests.post(API_URL, data, headers=header)
+                        print(response.status_code)
+                        print(response.json())
                         print("Well done", UsernameInput, "! You found a handshake. Your score gets an extra point.")
-
-                        #MYSQL send credentials
-                        connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD)
-                        cursor = connection.cursor()
-                        sqlIN = "INSERT INTO handshake_credentials (Bssid, Password, Date) VALUES (%s, %s, %s)"
-                        sqlVAR = (bssidDB, password, date)
-                        cursor.execute(sqlIN, sqlVAR)
-                        connection.commit()
-                        cursor.close()
-                        connection.close()
-                        print("Your found credentials have been added to Database..")
 
                     except UnicodeEncodeError:
                         pass
@@ -1036,4 +978,3 @@ if __name__ == "__main__":
 
     hc = HelpCrack(conf)
     hc.run()
-connection.close()
