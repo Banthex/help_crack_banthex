@@ -1,12 +1,34 @@
-# public version of help_crack_banthex
-Modification of help_crack.py from https://wpa-sec.stanev.org/
+# 🚀 Public Version of help_crack_banthex
 
-*added Leaderboard in mySQL on https://www.banthex.de/
+This is a modified version of `help_crack.py` from [WPA-SEC](https://wpa-sec.stanev.org/) with added features for the Banthex community and leaderboard integration.
 
-I am just a hobby programmer. Please forgive me if the code is ugly.
+## 📥 Installation
 
-Installation:
+### Automatic Installation
 
-1. `git clone https://github.com/Banthex/help_crack_banthex`  #clones the repo
-2. `pip install -r /help_crack_banthex/requirements.txt` #install requirements.txt
-3. configure your mysql credentials in help_crack_mod_bots.py
+1. Download the installer script [`installer.py`](installer.py).
+2. Run `installer.py` to automatically download and install the required dependencies.
+
+### Manual Installation
+
+1. Clone the repository:
+   ```shell
+   git clone https://github.com/Banthex/help_crack_banthex
+
+    Install the required dependencies by running:
+
+    shell
+
+    pip install -r /help_crack_banthex/requirements.txt
+
+    Configure your REST API credentials in help_crack_mod_bots.py.
+
+✨ Features
+
+    Leaderboard integration with MySQL on Banthex.de.
+    Additional modifications to help_crack.py for enhanced functionality.
+    Ongoing development and updates by a hobby programmer.
+
+    ℹ️ Please note that the code might not be optimized or follow best practices as it is developed by a hobby programmer.
+
+Feel free to reach out if you have any questions or need further assistance! 🌟
