@@ -6,7 +6,7 @@ This is a modified version of `help_crack.py` from [WPA-SEC](https://wpa-sec.sta
 
 ### Automatic Installation
 
-1. Download the installer script [`installer.py`](installer.py).
+1. Download the installer script https://github.com/Banthex/help_crack_banthex/blob/master/installer.py.
 2. Run `installer.py` to automatically download and install the required dependencies.
 
 ### Manual Installation
