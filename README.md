@@ -8,9 +8,11 @@ This is a modified version of `help_crack.py` from [WPA-SEC](https://wpa-sec.sta
 
 1. Download the installer script https://github.com/Banthex/help_crack_banthex/blob/master/installer.py.
 2. Run `pip install tqdm` if needed.
-4. Run `installer.py` to automatically download and install the required dependencies.
+3. Run `installer.py` to automatically download and install the required dependencies.
+4. Run `chmod a+x help_crack_banthex`.
+5. Run `./help_crack_banthex`.
 
-### Manual Installation
+### Manual Installation Currently not working because in the sourcecode there are parameters that have to fit your server!
 
 1. Clone the repository:
    ```shell
