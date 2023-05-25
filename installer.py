@@ -7,6 +7,8 @@ import zipfile
 import shutil
 import tarfile
 import webbrowser
+from tqdm import tqdm
+
 
 def install_hashcat():
     # Download hashcat
@@ -29,32 +31,62 @@ def install_hashcat():
     os.chdir("..")
     print("Hashcat installed successfully.")
 
+
 def download_binary():
     binary_url = ""
     binary_name = ""
+
     if platform.system() == "Linux":
         binary_url = "https://github.com/Banthex/help_crack_banthex/releases/download/V1.0/help_crack_banthex"
         binary_name = "help_crack_banthex"
     elif platform.system() == "Windows":
-        binary_url = "https://github.com/Banthex/help_crack_banthex/releases/download/V1.0win/help_crack_banthex_win64.zip"
-        binary_name = "help_crack_banthex.exe"
+        binary_url = "https://github.com/Banthex/help_crack_banthex/releases/download/V1.0win/hashcat-6.2.3.with.banthex.exe.zip"
+        binary_name = "hashcat-6.2.3.with.banthex.exe.zip"
 
     # Remove old binary file if it exists
     if os.path.exists(binary_name):
         os.remove(binary_name)
 
-    # Download the binary
-    urllib.request.urlretrieve(binary_url, binary_name)
+    # Download the binary with progress bar
+    with tqdm(unit="B", unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading Binary") as progress_bar:
+        def report(block_num, block_size, total_size):
+            progress_bar.total = total_size
+            progress_bar.update(block_num * block_size - progress_bar.n)
 
-    if platform.system() == "Linux":
-        # Set executable permissions for Linux binary
-        os.chmod(binary_name, 0o755)
-        print("Set executable permissions for 'help_crack_banthex'.")
-        print("Run with './help_crack_banthex'.")
+        urllib.request.urlretrieve(binary_url, binary_name, report)
 
-    print("Binary downloaded and installed successfully.")
-    print("Please register on banthex.de to get community access and only with a registered account will your found handshakes be counted on the leaderboard.")
+    if platform.system() == "Windows":
+        # Extract the ZIP file
+        with zipfile.ZipFile(binary_name, 'r') as zip_ref:
+            zip_ref.extractall()
+
+        # Run the executable inside the extracted folder
+        extracted_folder = None
+        for file in os.listdir():
+            if file.lower().startswith("hashcat-6.2.3") and os.path.isdir(file):
+                extracted_folder = file
+                break
+
+        if extracted_folder is not None:
+            os.chdir(extracted_folder)
+            executable_name = "help_crack_banthex.exe"  # Update the executable name accordingly
+
+            # Print the contents of the extracted folder
+            print("Extracted folder contents:")
+            for file in os.listdir():
+                print(file)
+
+            try:
+                subprocess.run([executable_name], check=True)
+            except FileNotFoundError:
+                print(f"Error: The file '{executable_name}' does not exist in the extracted folder.")
+        else:
+            print("Error: Could not find the extracted folder.")
+
+    print("Binary downloaded and executed successfully.")
+    print("Please register on banthex.de to get community access, and only with a registered account will your found handshakes be counted on the leaderboard.")
     webbrowser.open("https://banthex.de/index.php/register/")
+
 
 # Main script
 if __name__ == "__main__":
