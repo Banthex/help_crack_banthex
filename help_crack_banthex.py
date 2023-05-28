@@ -26,6 +26,8 @@ from functools import partial
 from datetime import datetime
 from past.builtins import raw_input
 import requests
+import tkinter as tk
+from tkinter import ttk
 
 try:
     from urllib import urlretrieve
@@ -69,8 +71,37 @@ conf['put_work_url'] = conf['base_url'] + '?put_work'
 
 date = datetime.now()
 
-print("Please insert your Username!")
-UsernameInput = input("Highscore Username: ")
+def submit_username():
+    global UsernameInput
+    UsernameInput = username_entry.get()
+    output_label.config(text="Username: " + UsernameInput)
+    root.destroy()
+
+root = tk.Tk()
+root.title("Username Input")
+
+style = ttk.Style()
+style.theme_use('clam')
+style.configure('TLabel', foreground='#FF0000', background='#333333', font=('Helvetica', 12))
+style.configure('TEntry', foreground='#333333', background='#FFFFFF', fieldbackground='#FFFFFF', font=('Helvetica', 12))
+style.configure('TButton', foreground='#FFFFFF', background='#333333', font=('Helvetica', 12))
+
+username_label = ttk.Label(root, text="Enter your username:")
+username_label.pack(pady=10)
+
+username_entry = ttk.Entry(root)
+username_entry.pack(pady=10)
+
+submit_button = ttk.Button(root, text="Submit", command=submit_username)
+submit_button.pack(pady=10)
+
+output_label = ttk.Label(root, text="")
+output_label.pack(pady=10)
+
+root.configure(background='#333333')
+root.geometry('300x200')
+root.resizable(False, False)
+root.mainloop()
 
 class HelpCrack(object):
     '''Main helpcrack class'''
@@ -646,7 +677,7 @@ class HelpCrack(object):
                 # TODO: fix this code duplication
                 if self.conf['format'] == 'hccapx':
                     if os.path.exists(self.conf['pmkid_file']):
-                        cracker = '{0} -m16800 --advice-disable --logfile-disable --potfile-disable {1} -o{2} {3}'.format(
+                        cracker = '{0} -m16800 --advice-disable --hwmon-disable --self-test-disable --logfile-disable --potfile-disable {1} -o{2} {3}'.format(
                             self.conf['cracker'], self.conf['coptions'], self.conf['key_file'], self.conf['pmkid_file'])
                         for dn in dictlist:
                             cracker = ''.join([cracker, ' ', dn])
@@ -661,7 +692,7 @@ class HelpCrack(object):
                             exit(1)
 
                     if os.path.exists(self.conf['hccapx_file']):
-                        cracker = '{0} -m2500 --nonce-error-corrections=8 --advice-disable --logfile-disable --potfile-disable {1} -o{2} {3}'.format(
+                        cracker = '{0} -m2500 --nonce-error-corrections=8 --advice-disable --hwmon-disable --self-test-disable --logfile-disable --potfile-disable {1} -o{2} {3}'.format(
                             self.conf['cracker'], self.conf['coptions'], self.conf['key_file'],
                             self.conf['hccapx_file'])
                         for dn in dictlist:
@@ -908,8 +939,8 @@ class HelpCrack(object):
                             k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')), 'OKGREEN')
                         date = datetime.now()
 
-                        API_URL = "https://mywordpres_api-url.com/wp-json/points/v1/points"
-                        header = {"Authorization" : "Basic myhashehere"}
+                        API_URL = "yourapiurl"
+                        header = {"Authorization" : "auth password"}
 
                         data = {
                             "points": "1",
