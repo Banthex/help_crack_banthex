@@ -4,6 +4,7 @@ import platform
 import subprocess
 import urllib.request
 import zipfile
+import tarfile
 import shutil
 import webbrowser
 import tkinter as tk
