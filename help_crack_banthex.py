@@ -21,7 +21,7 @@ import time
 import json
 import binascii
 import struct
-from distutils.version import StrictVersion
+from packaging.version import Version
 from functools import partial
 from datetime import datetime
 from past.builtins import raw_input
@@ -158,7 +158,7 @@ class HelpCrack(object):
             self.pprint('Can\'t check for new version, continue...', 'WARNING')
             return
 
-        if StrictVersion(remoteversion) > StrictVersion(self.conf['hc_ver']):
+        if Version(remoteversion) > Version(self.conf['hc_ver']):
             while True:
                 self.pprint('New version ' + remoteversion + ' of help_crack found.')
                 user = userinput('Update[y] or Show changelog[c]:')
@@ -226,7 +226,7 @@ class HelpCrack(object):
 
                 output = re.sub(r'[^\d\.]', '', output.decode())
                 try:
-                    if StrictVersion(output) >= StrictVersion('4.2.1'):
+                    if Version(output) >= Version('4.2.1'):
                         return True
                 except ValueError as e:
                     self.pprint('Unsupported hashcat version', 'FAIL')
