@@ -21,7 +21,7 @@ import time
 import json
 import binascii
 import struct
-from packaging.version import Version
+from packaging import version
 from functools import partial
 from datetime import datetime
 from past.builtins import raw_input
@@ -71,6 +71,10 @@ date = datetime.now()
 
 print("Please insert your Username!")
 UsernameInput = input("Highscore Username: ")
+
+print("Do you want to disable hardware monitoring? (yes/no)")
+hwmon_disable_input = input().lower().strip()
+hwmon_disable = hwmon_disable_input == "yes"
 
 class HelpCrack(object):
     '''Main helpcrack class'''
@@ -158,7 +162,7 @@ class HelpCrack(object):
             self.pprint('Can\'t check for new version, continue...', 'WARNING')
             return
 
-        if Version(remoteversion) > Version(self.conf['hc_ver']):
+        if version.parse(remoteversion) > version.parse(self.conf['hc_ver']):
             while True:
                 self.pprint('New version ' + remoteversion + ' of help_crack found.')
                 user = userinput('Update[y] or Show changelog[c]:')
@@ -226,7 +230,7 @@ class HelpCrack(object):
 
                 output = re.sub(r'[^\d\.]', '', output.decode())
                 try:
-                    if Version(output) >= Version('4.2.1'):
+                    if version.parse(output) >= version.parse('4.2.1'):
                         return True
                 except ValueError as e:
                     self.pprint('Unsupported hashcat version', 'FAIL')
@@ -640,14 +644,16 @@ class HelpCrack(object):
         fd = None
         if disablestdout:
             fd = open(os.devnull, 'w')
+        
+        hwmon_option = "--hwmon-disable" if hwmon_disable else ""
 
         while True:
             try:
                 # TODO: fix this code duplication
                 if self.conf['format'] == 'hccapx':
                     if os.path.exists(self.conf['pmkid_file']):
-                        cracker = '{0} -m22000 --advice-disable --logfile-disable --potfile-disable {1} -o{2} {3}'.format(
-                            self.conf['cracker'], self.conf['coptions'], self.conf['key_file'], self.conf['pmkid_file'])
+                        cracker = '{0} -m16800 --advice-disable --logfile-disable --potfile-disable {1} -o{2} {3}'.format(
+                            self.conf['cracker'], self.conf['coptions'], self.conf['key_file'], self.conf['pmkid_file'], hwmon_option)
                         for dn in dictlist:
                             cracker = ''.join([cracker, ' ', dn])
                         rc = subprocess.call(shlex.split(cracker), stdout=fd)
@@ -908,8 +914,8 @@ class HelpCrack(object):
                             k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')), 'OKGREEN')
                         date = datetime.now()
 
-                        API_URL = "https://mywordpres_api-url.com/wp-json/points/v1/points"
-                        header = {"Authorization" : "Basic myhashehere"}
+                        API_URL = "https://test.de/index.php/wp-json/wp/v2/gamipress/award-points"
+                        header = {"Authorization" : "Basic YOURBASICHASHERE"}
 
                         data = {
                             "points": "1",
