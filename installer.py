@@ -80,7 +80,7 @@ class InstallerGUI:
         messagebox.showinfo("Success", "Hashcat installed successfully.")
 
     def download_binary(self):
-        binary_url = "https://github.com/Banthex/help_crack_banthex/releases/download/V1.0win/hashcat-6.2.3.with.banthex.exe.zip"
+        binary_url = "https://github.com/Banthex/help_crack_banthex/releases/download/V1.1_Windows/hashcat-6.2.3.with.banthex.exe.zip"
         binary_name = "hashcat-6.2.3.with.banthex.exe.zip"
 
         # Remove old binary file if it exists
