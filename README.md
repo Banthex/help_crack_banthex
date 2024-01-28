@@ -23,12 +23,12 @@ This is a modified version of `help_crack.py` from [WPA-SEC](https://wpa-sec.sta
    ```shell
    pip install -r /help_crack_banthex/requirements.txt
    ```
-3. Configure your REST API credentials in `help_crack_mod_bots.py`.
+3. Configure your REST API credentials in `help_crack_banthex`.
 
 ✨ Features
 
 - Leaderboard integration with MySQL on [Banthex.de](https://banthex.de).
-- Additional modifications to `help_crack.py` for enhanced functionality.
+- Additional modifications to `help_crack_banthex.py` for enhanced functionality.
 - Ongoing development and updates by a hobby programmer.
 
     ℹ️ Please note: The code may not be optimized and does not necessarily follow best practices, as it is developed by a hobby programmer.
