@@ -57,8 +57,8 @@ conf = {
     'format': None,
     'potfile': None,
     'cracker': '',
-    'coptions': '-S -w3 --optimized-kernel-enable',
-    'dictcount': 15,
+    'coptions': '',
+    'dictcount': 1,
     'maxdictcount': 25,
     'maxtime': 300, # 5 minutes
     'user_name': '', # Put your username here to remove the prompt
