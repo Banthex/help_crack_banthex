@@ -59,6 +59,10 @@ conf = {
     'cracker': '',
     'coptions': '',
     'dictcount': 1,
+    'maxdictcount': 25,
+    'maxtime': 300, # 5 minutes
+    'user_name': '', # Put your username here to remove the prompt
+    'hwmon_prompt': True,
     'autodictcount': True,
     'hc_ver': '1.1.1'
 }
@@ -68,13 +72,17 @@ conf['get_work_url'] = conf['base_url'] + '?get_work'
 conf['put_work_url'] = conf['base_url'] + '?put_work'
 
 date = datetime.now()
+UsernameInput = conf['user_name']
 
-print("Please insert your Username!")
-UsernameInput = input("Highscore Username: ")
+if UsernameInput == '':
+    print("Please insert your Username!")
+    UsernameInput = input("Highscore Username: ")
 
-print("Do you want to disable hardware monitoring? (yes/no)")
-hwmon_disable_input = input().lower().strip()
-hwmon_disable = hwmon_disable_input == "yes"
+hwmon_disable = False
+if conf['hwmon_prompt']:
+    print("Do you want to disable hardware monitoring? (yes/no)")
+    hwmon_disable_input = input().lower().strip()
+    hwmon_disable = hwmon_disable_input == "yes"
 
 class HelpCrack(object):
     '''Main helpcrack class'''
@@ -523,7 +531,7 @@ class HelpCrack(object):
             dictmd5 = ''
             extract = False
             gzdictname = d['dpath'].split('/')[-1]
-            dictname = gzdictname.rsplit('.', 1)[0]
+            dictname = gzdictname#.rsplit('.', 1)[0]
             dlist.append(dictname)
 
             while True:
@@ -535,7 +543,7 @@ class HelpCrack(object):
                     if self.md5file(gzdictname) != d['dhash']:
                         self.pprint('{0} downloaded but hash mismatch'.format(gzdictname), 'WARNING')
 
-                    extract = True
+                    extract = False
 
                 if not os.path.exists(dictname):
                     extract = True
@@ -896,11 +904,11 @@ class HelpCrack(object):
             self.run_cracker(dictlist)
             cdiff = int(time.time() - cstart)
             if self.conf['autodictcount']:
-                if options['dictcount'] < 15 and cdiff < 300:  # 5 min
+                if options['dictcount'] < conf['maxdictcount'] and cdiff < conf['maxtime']:  # 5 min
                     options['dictcount'] += 1
                     self.pprint('Incrementing dictcount to {0}, last duration {1}s'.format(options['dictcount'], cdiff),
                                 'OKBLUE')
-                if options['dictcount'] > 1 and cdiff > 300:
+                if options['dictcount'] > 1 and cdiff > conf['maxtime']:
                     options['dictcount'] -= 1
                     self.pprint('Decrementing dictcount to {0}, last duration {1}s'.format(options['dictcount'], cdiff),
                                 'OKBLUE')
