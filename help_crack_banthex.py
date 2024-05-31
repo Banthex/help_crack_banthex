@@ -531,7 +531,7 @@ class HelpCrack(object):
             dictmd5 = ''
             extract = False
             gzdictname = d['dpath'].split('/')[-1]
-            dictname = gzdictname.rsplit('.', 1)[0]
+            dictname = gzdictname#.rsplit('.', 1)[0]
             dlist.append(dictname)
 
             while True:
@@ -543,7 +543,7 @@ class HelpCrack(object):
                     if self.md5file(gzdictname) != d['dhash']:
                         self.pprint('{0} downloaded but hash mismatch'.format(gzdictname), 'WARNING')
 
-                    extract = True
+                    extract = False
 
                 if not os.path.exists(dictname):
                     extract = True
