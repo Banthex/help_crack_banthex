@@ -60,7 +60,8 @@ conf = {
     'coptions': '',
     'dictcount': 1,
     'autodictcount': True,
-    'hc_ver': '1.1.1'
+    'hc_ver': '1.1.1',
+    'max_temp': None
 }
 conf['help_crack'] = conf['base_url'] + 'hc/help_crack.py'
 conf['help_crack_cl'] = conf['base_url'] + 'hc/CHANGELOG'
@@ -75,6 +76,11 @@ UsernameInput = input("Highscore Username: ")
 print("Do you want to disable hardware monitoring? (yes/no)")
 hwmon_disable_input = input().lower().strip()
 hwmon_disable = hwmon_disable_input == "yes"
+
+if not hwmon_disable:
+    print("Please enter the maximum GPU temperature (in degrees Celsius):")
+    max_temp_input = input().strip()
+    conf['max_temp'] = max_temp_input
 
 class HelpCrack(object):
     '''Main helpcrack class'''
@@ -646,14 +652,15 @@ class HelpCrack(object):
             fd = open(os.devnull, 'w')
         
         hwmon_option = "--hwmon-disable" if hwmon_disable else ""
+        temp_option = f"--gpu-temp-abort={conf['max_temp']}" if conf['max_temp'] else ""
 
         while True:
             try:
                 # TODO: fix this code duplication
                 if self.conf['format'] == 'hccapx':
                     if os.path.exists(self.conf['pmkid_file']):
-                        cracker = '{0} -m16800 --advice-disable --logfile-disable --potfile-disable {1} -o{2} {3}'.format(
-                            self.conf['cracker'], self.conf['coptions'], self.conf['key_file'], self.conf['pmkid_file'], hwmon_option)
+                        cracker = '{0} -m16800 --advice-disable --logfile-disable --potfile-disable {1} -o{2} {3} {4}'.format(
+                            self.conf['cracker'], self.conf['coptions'], self.conf['key_file'], self.conf['pmkid_file'], hwmon_option, temp_option)
                         for dn in dictlist:
                             cracker = ''.join([cracker, ' ', dn])
                         rc = subprocess.call(shlex.split(cracker), stdout=fd)
@@ -667,9 +674,9 @@ class HelpCrack(object):
                             exit(1)
 
                     if os.path.exists(self.conf['hccapx_file']):
-                        cracker = '{0} -m2500 --nonce-error-corrections=8 --advice-disable --logfile-disable --potfile-disable {1} -o{2} {3}'.format(
+                        cracker = '{0} -m2500 --nonce-error-corrections=8 --advice-disable --logfile-disable --potfile-disable {1} -o{2} {3} {4}'.format(
                             self.conf['cracker'], self.conf['coptions'], self.conf['key_file'],
-                            self.conf['hccapx_file'])
+                            self.conf['hccapx_file'], hwmon_option, temp_option)
                         for dn in dictlist:
                             cracker = ''.join([cracker, ' ', dn])
                         rc = subprocess.call(shlex.split(cracker), stdout=fd)

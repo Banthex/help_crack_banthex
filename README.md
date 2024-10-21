@@ -46,4 +46,12 @@ To participate in the leaderboard and have your found handshakes tracked, please
 - The script works with the Stanev website.
 - The MySQL for hashes is on WPA-SEC, not on Banthex.de. Only the leaderboard is on Banthex.de.
 
+## 🔧 Setting Maximum GPU Temperature
+
+To set the maximum GPU temperature, follow these steps:
+
+1. When prompted, choose whether to disable hardware monitoring.
+2. If you choose not to disable hardware monitoring, you will be prompted to enter the maximum GPU temperature (in degrees Celsius).
+3. The script will use the `--gpu-temp-abort` option with the value you provide to set the maximum GPU temperature.
+
 Feel free to reach out if you have any questions or need further assistance! 🌟
