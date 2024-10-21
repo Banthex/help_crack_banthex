@@ -964,7 +964,7 @@ if __name__ == "__main__":
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-ad', '--additional', type=lambda x: is_valid_file(parser, x),
                        help='additional user dictionary to be checked after downloaded one')
-    group.add_argument('-cd', '--custom', type=lambda x: is_valid_file(parser, x),
+    group.add.argument('-cd', '--custom', type=lambda x: is_valid_file(parser, x),
                        help='custom user dictionary to be checked against all uncracked handshakes')
 
     try:
