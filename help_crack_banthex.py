@@ -943,6 +943,178 @@ class HelpCrack(object):
                 os.unlink(self.conf['res_file'])
             netdata = None
 
+    def fetch_versions(self):
+        versions = []
+        page = 1
+        while True:
+            response = requests.get(f"https://api.github.com/repos/Banthex/help_crack_banthex/releases?per_page=100&page={page}")
+            if response.status_code == 200:
+                releases = response.json()
+                if not releases:  # No more releases
+                    break
+                versions.extend(release["tag_name"] for release in releases)
+                page += 1
+            else:
+                print(f"Failed to fetch versions: {response.status_code}")
+                return []
+
+        return versions
+
+    def select_version(self):
+        versions = self.fetch_versions()
+        if not versions:
+            print("No versions available.")
+            return None
+
+        print("Available versions:")
+        for i, version in enumerate(versions):
+            print(f"{i + 1}. {version}")
+
+        while True:
+            try:
+                choice = int(input("Select a version (enter the number): "))
+                if 1 <= choice <= len(versions):
+                    return versions[choice - 1]
+                else:
+                    print("Invalid choice. Please enter a valid number.")
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+
+    def fetch_assets(self, version):
+        response = requests.get(f"https://api.github.com/repos/Banthex/help_crack_banthex/releases/tags/{version}")
+        if response.status_code == 200:
+            release = response.json()
+            return release.get("assets", [])
+        else:
+            print(f"Failed to fetch assets for version {version}: {response.status_code}")
+            return []
+
+    def select_asset(self, assets):
+        if not assets:
+            print("No assets available for the selected version.")
+            return None
+
+        print("Available assets:")
+        for i, asset in enumerate(assets):
+            print(f"{i + 1}. {asset['name']}")
+
+        while True:
+            try:
+                choice = int(input("Select an asset (enter the number): "))
+                if 1 <= choice <= len(assets):
+                    return assets[choice - 1]
+                else:
+                    print("Invalid choice. Please enter a valid number.")
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+
+    def run_with_version_selection(self):
+        version = self.select_version()
+        if not version:
+            print("No version selected. Exiting.")
+            return
+
+        assets = self.fetch_assets(version)
+        asset = self.select_asset(assets)
+        if not asset:
+            print("No asset selected. Exiting.")
+            return
+
+        print(f"Selected version: {version}")
+        print(f"Selected asset: {asset['name']}")
+
+        # Continue with the rest of the installation process using the selected version and asset
+        self.check_version()
+        self.check_tools()
+
+        # challenge the cracker
+        self.pprint('Challenge cracker for correct results', 'OKBLUE')
+        netdata = self.prepare_challenge()
+        self.prepare_work(netdata)
+        self.run_cracker([netdata[0]['dictname']], disablestdout=True)
+        keypair = self.get_key()
+
+        if not keypair \
+                or len(keypair) != 2 \
+                or keypair[0]['key'] != bytearray(netdata[0]['key'], 'utf-8', errors='ignore') \
+                or keypair[1]['key'] != bytearray(netdata[0]['key'], 'utf-8', errors='ignore'):
+            self.pprint('Challenge solving failed! Check if your cracker runs correctly.', 'FAIL')
+            exit(1)
+
+        hashcache = set()
+        netdata = self.resume_check()
+        metadata = {'ssid': '00'}
+        options = {'format': self.conf['format'], 'cracker': self.conf['cracker'], 'dictcount': self.conf['dictcount']}
+        while True:
+            if netdata is None:
+                if self.conf['custom']:
+                    options['ssid'] = metadata['ssid']
+                netdata = self.get_work(json.JSONEncoder().encode(options))
+
+            self.create_resume(netdata)
+            metadata = self.prepare_work(netdata)
+
+            # add custom dict or prepare remote ones
+            if self.conf['custom']:
+                dictlist = list([self.conf['custom']])
+            else:
+                dictlist = self.prepare_dicts(netdata)
+
+            # do we have additional user dictionary supplied?
+            if conf['additional'] is not None:
+                # compute handshakes simple hash
+                ndhash = 0
+                for part in netdata:
+                    if 'hccapx' in part:
+                        ndhash ^= hash(part['hccapx'])
+                if ndhash not in hashcache:
+                    hashcache.add(ndhash)
+                    dictlist.append(conf['additional'])
+
+            # run cracker and collect results
+            cstart = time.time()
+            self.run_cracker(dictlist)
+            cdiff = int(time.time() - cstart)
+            if self.conf['autodictcount']:
+                if options['dictcount'] < 15 and cdiff < 300:  # 5 min
+                    options['dictcount'] += 1
+                    self.pprint('Incrementing dictcount to {0}, last duration {1}s'.format(options['dictcount'], cdiff),
+                                'OKBLUE')
+                if options['dictcount'] > 1 and cdiff > 300:
+                    options['dictcount'] -= 1
+                    self.pprint('Decrementing dictcount to {0}, last duration {1}s'.format(options['dictcount'], cdiff),
+                                'OKBLUE')
+
+            keypair = self.get_key()
+            if keypair:
+                for k in keypair:
+                    try:
+                        self.pprint('Key for bssid {0} is: {1}'.format(
+                            k['bssid'].decode(sys.stdout.encoding or 'utf-8', errors='ignore'),
+                            k['key'].decode(sys.stdout.encoding or 'utf-8', errors='ignore')), 'OKGREEN')
+                        date = datetime.now()
+
+                        API_URL = "https://test.de/index.php/wp-json/wp/v2/gamipress/award-points"
+                        header = {"Authorization" : "Basic YOURBASICHASHERE"}
+
+                        data = {
+                            "points": "1",
+                            "user": UsernameInput,
+                            "points_type": "handshake"
+                            }
+                        response = requests.post(API_URL, data, headers=header)
+                        print(response.status_code)
+                        print(response.json())
+                        print("Well done", UsernameInput, "! You found a handshake. Your score gets an extra point.")
+
+                    except UnicodeEncodeError:
+                        pass
+            self.put_work(metadata, keypair)
+
+            # cleanup
+            if os.path.exists(self.conf['res_file']):
+                os.unlink(self.conf['res_file'])
+            netdata = None
 
 if __name__ == "__main__":
     def is_valid_file(aparser, arg):
@@ -990,4 +1162,4 @@ if __name__ == "__main__":
         conf['autodictcount'] = False
 
     hc = HelpCrack(conf)
-    hc.run()
+    hc.run_with_version_selection()
